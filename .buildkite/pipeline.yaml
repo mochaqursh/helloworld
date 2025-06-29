@@ -1,8 +1,7 @@
 steps:
-  # Step 1: Build the Go application in Docker and upload artifact
   - label: "🔨 Build Go Application"
     key: "build"
-    command: "cd hello && go build -o hello . && ls -la hello"
+    command: "cd hello && go build -o hello ."
     artifact_paths: "hello/hello"
     plugins:
       - docker#v5.8.0:
@@ -11,53 +10,20 @@ steps:
           volumes:
             - ".:/app"
 
-  # Step 2: Welcome message after build
-  - label: "🎉 Welcome Message"
-    key: "welcome"
-    command: |
-      echo "Welcome! Your Go application has been successfully built!"
-      echo "Ready to proceed with the demo."
-    depends_on: "build"
-
-  # Step 3: Approval step
-  - block: ":rocket: Are we ready?"
-    key: "approval"
-    depends_on: "welcome"
-
-  # Step 4: Block step to get user input
   - block: "📝 Enter your name"
     key: "input"
     prompt: "What's your name?"
     fields:
-      - text: "Code Name"
-        key: "release-name"
-        hint: "Enter your name here"
+      - text: "Name"
+        key: "user-name"
         required: true
-    depends_on: "approval"
 
-  # Step 5: Create script with user input (FIXED)
-  - label: "🔍 Prepare Script"
-    key: "prepare"
-    command: |
-      echo "Saving user input to file..."
-      buildkite-agent meta-data get "release-name" > /tmp/debug-name.txt
-      echo "Creating executable script..."
-      echo "#!/bin/bash" > /tmp/run-hello.sh
-      echo 'NAME="$(cat /tmp/debug-name.txt)"' >> /tmp/run-hello.sh
-      echo './hello/hello "$NAME"' >> /tmp/run-hello.sh
-      chmod +x /tmp/run-hello.sh
-      echo "Script created:"
-      cat /tmp/run-hello.sh
-    depends_on: "input"
-
-  # Step 6: Download artifact and run with user input
   - label: "🎉 Say Hello"
     command: |
-      echo "Downloading the compiled binary..."
       buildkite-agent artifact download "hello/hello" .
       chmod +x hello/hello
-      echo "Running the application..."
-      /tmp/run-hello.sh
+      USER_NAME=$(buildkite-agent meta-data get "user-name")
+      ./hello/hello "$USER_NAME"
     depends_on: 
       - "build"
-      - "prepare"
+      - "input"

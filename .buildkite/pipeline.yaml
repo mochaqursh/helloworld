@@ -18,12 +18,21 @@ steps:
         key: "user-name"
         required: true
 
-  - label: "🎉 Say Hello"
+  - label: "🔍 Create Shell Script"
+    key: "prepare"
     command: |
+      cat > /tmp/run-app.sh << 'SCRIPT'
+      #!/bin/bash
       buildkite-agent artifact download "hello/hello" .
       chmod +x hello/hello
       USER_NAME=$(buildkite-agent meta-data get "user-name")
       ./hello/hello "$USER_NAME"
+      SCRIPT
+      chmod +x /tmp/run-app.sh
+    depends_on: "input"
+
+  - label: "🎉 Say Hello"
+    command: "/tmp/run-app.sh"
     depends_on: 
       - "build"
-      - "input"
+      - "prepare"

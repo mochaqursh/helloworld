@@ -27,17 +27,21 @@ steps:
         required: true
     depends_on: "approval"
 
-  # Step 4: Create script with user input
+  # Step 4: Create script with user input (Fixed)
   - label: "🔍 Prepare Script"
     key: "prepare"
     command: |
       echo "Saving user input to file..."
       buildkite-agent meta-data get "release-name" > /tmp/debug-name.txt
+      echo "User input: $(cat /tmp/debug-name.txt)"
       echo "Creating executable script..."
-      echo "#!/bin/bash" > /tmp/run-hello.sh
-      echo "NAME=\"\$(cat /tmp/debug-name.txt)\"" >> /tmp/run-hello.sh
-      echo "./hello/hello \"\\\$NAME\"" >> /tmp/run-hello.sh
+      printf '#!/bin/bash\n' > /tmp/run-hello.sh
+      printf 'NAME="$(cat /tmp/debug-name.txt)"\n' >> /tmp/run-hello.sh
+      printf './hello/hello "$NAME"\n' >> /tmp/run-hello.sh
       chmod +x /tmp/run-hello.sh
+      echo "Script created:"
+      cat /tmp/run-hello.sh
+      echo "--- End of script ---"
     depends_on: "input"
 
   # Step 5: Download artifact and run with user input
@@ -46,6 +50,9 @@ steps:
       echo "Downloading the compiled binary..."
       buildkite-agent artifact download "hello/hello" .
       chmod +x hello/hello
+      echo "Checking script before execution:"
+      cat /tmp/run-hello.sh
+      echo "--- Script check complete ---"
       echo "Running the application..."
       /tmp/run-hello.sh
     depends_on: 

@@ -1,7 +1,8 @@
 steps:
+  # Step 1: Build the Go application in Docker and upload artifact
   - label: "🔨 Build Go Application"
     key: "build"
-    command: "cd hello && go build -o hello ."
+    command: "cd hello && go build -o hello . && ls -la hello"
     artifact_paths: "hello/hello"
     plugins:
       - docker#v5.8.0:
@@ -10,31 +11,25 @@ steps:
           volumes:
             - ".:/app"
 
+  # Step 2: Approval step after build
+  - block: ":rocket: Are we ready?"
+    key: "approval"
+    depends_on: "build"
+
+  # Step 3: Block step to get user input
   - block: "📝 Enter your name"
     key: "input"
     prompt: "What's your name?"
     fields:
-      - text: "Name"
-        key: "user"
+      - text: "Code Name"
+        key: "release-name"
+        hint: "Enter your name here"
         required: true
+    depends_on: "approval"
 
-  - label: "🔍 Create Shell Script"
-    key: "prepare"
-    command: |
-      cat > /tmp/run-app.sh << 'SCRIPT'
-      #!/bin/bash
-      buildkite-agent artifact download "hello/hello" .
-      chmod +x hello/hello
-      userx=$(buildkite-agent meta-data get user)
-      echo "Username retrieved: $userx"
-      echo "Running: ./hello/hello \"$userx\""
-      ./hello/hello "$USER_NAME"
-      SCRIPT
-      chmod +x /tmp/run-app.sh
-    depends_on: "input"
-
+  # Step 4: Run the application script
   - label: "🎉 Say Hello"
-    command: "/tmp/run-app.sh"
+    command: "./scripts.sh"
     depends_on: 
       - "build"
-      - "prepare"
+      - "input"

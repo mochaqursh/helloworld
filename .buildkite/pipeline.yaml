@@ -11,12 +11,20 @@ steps:
           volumes:
             - ".:/app"
 
-  # Step 2: Approval step after build
-  - block: ":rocket: Are we ready?"
-    key: "approval"
+  # Step 2: Welcome message after build
+  - label: "🎉 Welcome Message"
+    key: "welcome"
+    command: |
+      echo "Welcome! Your Go application has been successfully built!"
+      echo "Ready to proceed with the demo."
     depends_on: "build"
 
-  # Step 3: Block step to get user input
+  # Step 3: Approval step
+  - block: ":rocket: Are we ready?"
+    key: "approval"
+    depends_on: "welcome"
+
+  # Step 4: Block step to get user input
   - block: "📝 Enter your name"
     key: "input"
     prompt: "What's your name?"
@@ -27,7 +35,7 @@ steps:
         required: true
     depends_on: "approval"
 
-  # Step 4: Create script with user input
+  # Step 5: Create script with user input (FIXED)
   - label: "🔍 Prepare Script"
     key: "prepare"
     command: |
@@ -35,12 +43,14 @@ steps:
       buildkite-agent meta-data get "release-name" > /tmp/debug-name.txt
       echo "Creating executable script..."
       echo "#!/bin/bash" > /tmp/run-hello.sh
-      echo "NAME=\"\$(cat /tmp/debug-name.txt)\"" >> /tmp/run-hello.sh
-      echo "./hello/hello \"\\\$NAME\"" >> /tmp/run-hello.sh
+      echo 'NAME="$(cat /tmp/debug-name.txt)"' >> /tmp/run-hello.sh
+      echo './hello/hello "$NAME"' >> /tmp/run-hello.sh
       chmod +x /tmp/run-hello.sh
+      echo "Script created:"
+      cat /tmp/run-hello.sh
     depends_on: "input"
 
-  # Step 5: Download artifact and run with user input
+  # Step 6: Download artifact and run with user input
   - label: "🎉 Say Hello"
     command: |
       echo "Downloading the compiled binary..."

@@ -25,7 +25,7 @@ steps:
       #!/bin/bash
       buildkite-agent artifact download "hello/hello" .
       chmod +x hello/hello
-      USER_NAME=$(buildkite-agent meta-data get "user-name")
+      USER_NAME=$(buildkite-agent meta-data get user-name)
       ./hello/hello "$USER_NAME"
       SCRIPT
       chmod +x /tmp/run-app.sh

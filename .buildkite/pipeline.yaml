@@ -29,7 +29,7 @@ steps:
 
   # Step 4: Run the application script
   - label: "🎉 Say Hello"
-    command: "./scripts.sh"
+    command: "script.sh"
     depends_on: 
       - "build"
       - "input"

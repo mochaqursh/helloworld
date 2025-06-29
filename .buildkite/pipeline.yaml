@@ -27,7 +27,7 @@ steps:
         required: true
     depends_on: "approval"
 
-  # Step 4: Create script with user input (Fixed)
+  # Step 4: Create script with user input (FIXED)
   - label: "🔍 Prepare Script"
     key: "prepare"
     command: |
